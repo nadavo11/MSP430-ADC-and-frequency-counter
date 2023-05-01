@@ -12,6 +12,9 @@ extern void sysConfig(void);
 extern void SetByteToPort(char); // Added By RK
 extern void clrPortByte(char);
 extern void delay(unsigned int);
+
+extern void wait_1_sec();
+
 extern void enterLPM(unsigned char);
 extern void enable_interrupts();
 extern void disable_interrupts();
@@ -76,7 +79,9 @@ extern __interrupt void PBs_handler_P2(void);
 #define lcd_function_set    lcd_cmd(0x3C) // 8bit,two lines,5x10 dots
 #define lcd_new_line        lcd_cmd(0xC0)
 
+
 extern void lcd_cmd(unsigned char);
+extern void lcd_head(int row);
 extern void lcd_data(unsigned char);
 extern void lcd_puts(const char * s);
 extern void lcd_init();
@@ -84,6 +89,9 @@ extern void lcd_strobe();
 extern void DelayMs(unsigned int);
 extern void freqMeas();
 extern void DelayUs(unsigned int);
+//
+extern void lcd_print_num(unsigned int num);
+
 /*
  *  Delay functions for HI-TECH C on the PIC18
  *
