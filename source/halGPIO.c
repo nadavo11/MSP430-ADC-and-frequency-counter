@@ -1,10 +1,53 @@
 #include  "../header/halGPIO.h"     // private library - HAL layer
+#include "stdio.h"
 
 // Global Variables
 unsigned int Count = 0x0;
 unsigned int REdge1, REdge2;
 
+//-------------------------------------------------------------
+//              Frequency Measurement
+//-------------------------------------------------------------
 
+void freqMeas(){
+        WDTCTL = WDTPW + WDTHOLD;
+        float N_SMCLK;
+        float freq;
+        float tmp = 0;
+        float SMCLK_FREQ = 1048576;   // 2^20
+        unsigned int real_freq;
+        char strFreq[6] = {'\0'};
+        write_freq_tmp_LCD(); // Write template of Frequency
+        TA1CTL |= TASSEL_2 + MC_2 + TACLR;         //start Timer
+        while(state == state1){
+            disable_interrupts();
+            strFreq[6] = '\0';   // Reset strFreq
+            REdge2 = REdge1 =  0;
+            TA1CCTL2 |= CCIE;                                // enable interrupt
+            __bis_SR_register(LPM0_bits + GIE);              // Enter LPM0
+            if(REdge1 == 0 && REdge2 == 0)  // first time
+              continue;
+            tmp = 1.05915;  // after calc the error
+            N_SMCLK = 0.9*(REdge2 - REdge1)*tmp;
+            freq = SMCLK_FREQ / N_SMCLK;       // Calculate Frequency
+            real_freq = (unsigned int) freq ;
+            if (real_freq == 65535)  // delete later
+                continue;
+            sprintf(strFreq, "%d", real_freq);
+            write_freq_tmp_LCD();
+            lcd_home();
+            lcd_cursor_right();
+            lcd_cursor_right();
+            lcd_cursor_right();
+            lcd_cursor_right();
+            lcd_puts(strFreq);
+
+            cursor_off;
+            DelayMs(500);
+            enable_interrupts();
+        }
+        TA1CTL = MC_0 ; // Stop Timer
+}
 //--------------------------------------------------------------------
 //             System Configuration  
 //--------------------------------------------------------------------
@@ -36,7 +79,27 @@ void delay(unsigned int t){  //
 	
 	for(i=t; i>0; i--);
 }
+//---------------------------------------------------------------------
+//            General Function - No need
+//---------------------------------------------------------------------
+void int2str(char *str, unsigned int num){
+    int strSize = 0;
+    long tmp = num, len = 0;
+    int j;
+    // Find the size of the intPart by repeatedly dividing by 10
+    while(tmp){
+        len++;
+        tmp /= 10;
+    }
 
+    // Print out the numbers in reverse
+    for(j = len - 1; j >= 0; j--){
+        str[j] = (num % 10) + '0';
+        num /= 10;
+    }
+    strSize += len;
+    str[strSize] = '\0';
+}
 //---------------------------------------------------------------------
 //            Enter from LPM0 mode
 //---------------------------------------------------------------------
@@ -194,20 +257,15 @@ void lcd_init(){
     lcd_cmd(0xF); //Display On, Cursor On, Cursor Blink
     lcd_cmd(0x1); //Display Clear
     lcd_cmd(0x6); //Entry Mode
-    lcd_cmd(0x80); //Initialise DDRAM address to zero
-    /////////////////////
-    unsigned char c = 'c';
-    //lcd_home();
-    DelayUs(200);
-    lcd_data(c);
+    lcd_cmd(0x80); //Initialize DDRAM address to zero
 }
 //******************************************************************
 // lcd strobe functions
 //******************************************************************
 void lcd_strobe(){
   LCD_EN(1);
-  asm("Nop");
   asm("NOP");
+ // asm("NOP");
   LCD_EN(0);
 }
 //******************************************************************
@@ -216,7 +274,7 @@ void lcd_strobe(){
 void DelayUs(unsigned int cnt){
 
     unsigned char i;
-    for(i=cnt ; i>0 ; i--) asm("nop"); //  asm("nop") takes 1usec
+    for(i=cnt ; i>0 ; i--) asm("nop"); // tha command asm("nop") takes raphly 1usec
 
 }
 //******************************************************************
@@ -225,7 +283,7 @@ void DelayUs(unsigned int cnt){
 void DelayMs(unsigned int cnt){
 
     unsigned char i;
-    for(i=cnt ; i>0 ; i--) DelayUs(1000); // asm("nop") takes 1usec
+    for(i=cnt ; i>0 ; i--) DelayUs(1000); // tha command asm("nop") takes raphly 1usec
 
 }
 
@@ -237,6 +295,7 @@ void DelayMs(unsigned int cnt){
 #pragma vector = TIMER1_A1_VECTOR
 __interrupt void TIMER1_A1_ISR(void)
 #elif defined(__GNUC__)
+
 void __attribute__ ((interrupt(TIMER1_A1_VECTOR))) TIMER1_A1_ISR (void)
 #else
 #error Compiler not supported!
@@ -268,12 +327,13 @@ void __attribute__ ((interrupt(TIMER1_A1_VECTOR))) TIMER1_A1_ISR (void)
 
                   }
           break;
-      case TA1IV_6: break;                  // Vector  6:  Reserved CCIFG
-      case TA1IV_8: break;                  // Vector  8:  Reserved CCIFG
-      case TA1IV_TAIFG: break;              // Vector 10:  TAIFG
-      default:  break;
+   case TA1IV_6: break;                  // Vector  6:  Reserved CCIFG
+   case TA1IV_8: break;                  // Vector  8:  Reserved CCIFG
+   case TA1IV_TAIFG: break;              // Vector 10:  TAIFG
+   default:  break;
   }
 }
+
 
 //*********************************************************************
 //            TimerA0 Interrupt Service Routine

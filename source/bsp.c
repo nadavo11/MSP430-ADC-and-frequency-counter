@@ -3,6 +3,7 @@
 //-----------------------------------------------------------------------------  
 //           GPIO configuration
 //-----------------------------------------------------------------------------
+
 void GPIOconfig(void){
  // volatile unsigned int i; // in case of while loop usage
   
@@ -11,9 +12,9 @@ void GPIOconfig(void){
   // LCD configuration
   LCD_DATA_WRITE &= ~0xFF;
   LCD_DATA_DIR |= 0xF0;    // P1.4-P1.7 To Output('1')
-  LCD_DATA_SEL &= ~0xF0;   // Bit clear P1.4-P1.7
+  LCD_DATA_SEL &= ~0xF0;   // Bit clear P2.4-P2.7
   LCD_CTL_SEL  &= ~0xE0;   // Bit clear P2.5-P2.7
-
+  
   // Generator Setup
   //From the table at CCIx p2.4
   GenPortDir &=  ~BIT4;               // P2.4 Input Capture = '1'
@@ -34,8 +35,16 @@ void GPIOconfig(void){
   PBsArrIntEn |= 0x07;               // P1.0-2 - '1'
   PBsArrIntPend &= ~0xFF;            // clear pending interrupts P1.0-P1.3 all P1
   
+  // PushButton 3 Setup For Main Lab
+   PB3sArrPortSel &= ~BIT0;           //
+   PB3sArrPortOut &= ~BIT0;            // Set P2Out to '0'
+   PB3sArrPortDir &= ~BIT0;            // P2.0 - Input ('0')
+   PB3sArrIntEdgeSel &= ~BIT0;         // pull-down mode  P2.0 - '0'
+   PB3sArrIntEn |= BIT0;               // P1.0-2 - '1'
+   PB3sArrIntPend &= ~BIT0;            // clear pending interrupts P2.0
 
   _BIS_SR(GIE);                     // enable interrupts globally
+
 
 }
 
@@ -65,8 +74,7 @@ void TIMER0_A0_config(void){
     TA0CCTL0 = CCIE;
     TACCR0 = 0xFFFF;
     TA0CTL = TASSEL_2 + MC_0 + ID_3;  //  select: 2 - SMCLK ; control: 3 - Up/Down  ; divider: 3 - /8
-    //__bis_SR_register(LPM0_bits + GIE);       // Enter LPM0 w/ interrupt
-
+    __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0 w/ interrupt
 } 
 
 //------------------------------------------------------------------------------------- 
