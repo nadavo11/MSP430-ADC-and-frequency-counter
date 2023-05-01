@@ -5,53 +5,10 @@
 
 // Global Variables
 
-unsigned int REdge1, REdge2;
+//unsigned int REdge1, REdge2;
 #define ADC_NUMBER_CAPTURES 100
 unsigned int adcCaptureValues[ADC_NUMBER_CAPTURES];
 unsigned int adcCapturePointer;
-
-//-------------------------------------------------------------
-//              Frequency Measurement
-//-------------------------------------------------------------
-void freqMeas(){
-        WDTCTL = WDTPW + WDTHOLD;
-        float N_SMCLK;
-        float freq;
-        float tmp = 0;
-        float SMCLK_FREQ = 1048576;   // 2^20
-        unsigned int real_freq;
-        char strFreq[6] = {'\0'};
-        write_freq_tmp_LCD(); // Write template of Frequency
-        TA1CTL |= TASSEL_2 + MC_2 + TACLR;         //start Timer
-        while(state == state1){
-            disable_interrupts();
-            strFreq[6] = '\0';   // Reset strFreq
-            REdge2 = REdge1 =  0;
-            TA1CCTL2 |= CCIE;                                // enable interrupt
-            __bis_SR_register(LPM0_bits + GIE);              // Enter LPM0
-            if(REdge1 == 0 && REdge2 == 0)  // first time
-              continue;
-            tmp = 1.05915;  // after calc the error
-            N_SMCLK = 0.9*(REdge2 - REdge1)*tmp;
-            freq = SMCLK_FREQ / N_SMCLK;       // Calculate Frequency
-            real_freq = (unsigned int) freq ;
-            if (real_freq == 65535)  // delete later
-                continue;
-            sprintf(strFreq, "%d", real_freq);
-            write_freq_tmp_LCD();
-            lcd_home();
-            lcd_cursor_right();
-            lcd_cursor_right();
-            lcd_cursor_right();
-            lcd_cursor_right();
-            lcd_puts(strFreq);
-
-            cursor_off;
-            DelayMs(500);
-            enable_interrupts();
-        }
-        TA1CTL = MC_0 ; // Stop Timer
-}
 //-------------------------------------------------------------
 //                         CountDown
 //-------------------------------------------------------------
@@ -61,9 +18,47 @@ void CountDown(){
       char unity = 0x39; // '9'
       for (i =  0 ; i <= 60 ; i++){
         if (state == state2){
-            lcd_cmd(0x02);
+            lcd_cmd(0x2);
+
             if( i == 0){
               char const * startWatch ="01:00";
+              lcd_puts(startWatch);
+              startTimerA0();
+              startTimerA0();
+            }
+            else {
+              char const * minute_str ="00:";
+              lcd_puts(minute_str);
+              lcd_data(dozen);
+              lcd_data(unity);
+
+              unity --;
+              // zero on units
+              if( unity == 0x2F){
+                unity = 0x39;
+                //decrease decimal value
+                dozen = dozen-1;
+              }
+              startTimerA0();
+              startTimerA0();
+            }
+        }
+        else
+        {
+            break;
+        }
+      }
+}
+/////////////////////////////////////////////////////////////////////////
+void CountUp(){
+      int i;
+      char dozen = 0x35;  // '5'
+      char unity = 0x39; // '9'
+      for (i = 0 ; i <= 60 ; i++){
+        if (state == state2){
+            lcd_cmd(0x02);
+            if( i == 0){
+              char const * startWatch ="00:00";
               lcd_puts(startWatch);
               startTimerA0();
               startTimerA0();
