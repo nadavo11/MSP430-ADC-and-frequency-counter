@@ -4,7 +4,7 @@
 #include  "../header/halGPIO.h"     // private library - HAL layer
 
 
-
+extern void CountUp();
 extern void CountDown();
 extern void startTimerA0();
 extern void freqCounter();
