@@ -9,7 +9,7 @@ void GPIOconfig(void){
   
   WDTCTL = WDTHOLD | WDTPW;		// Stop WDT
    
-  // LCD configuration
+  // LCD configuration//////////////////////////////////
   LCD_DATA_WRITE &= ~0xFF;
   LCD_DATA_DIR |= 0xF0;    // P1.4-P1.7 To Output('1')
   LCD_DATA_SEL &= ~0xF0;   // Bit clear P2.4-P2.7

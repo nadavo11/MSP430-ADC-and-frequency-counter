@@ -16,15 +16,14 @@ void CountDown(){
       int i;
       char dozen = 0x35;  // '5'
       char unity = 0x39; // '9'
-      for (i =  0 ; i <= 60 ; i++){
+      for (i =  0 ; i <= 3 ; i++){
         if (state == state2){
             lcd_cmd(0x2);
 
             if( i == 0){
               char const * startWatch ="01:00";
               lcd_puts(startWatch);
-              startTimerA0();
-              startTimerA0();
+              wait_1_sec();
             }
             else {
               char const * minute_str ="00:";
@@ -39,8 +38,7 @@ void CountDown(){
                 //decrease decimal value
                 dozen = dozen-1;
               }
-              startTimerA0();
-              startTimerA0();
+              wait_1_sec();
             }
         }
         else
@@ -52,16 +50,17 @@ void CountDown(){
 /////////////////////////////////////////////////////////////////////////
 void CountUp(){
       int i;
-      char dozen = 0x35;  // '5'
-      char unity = 0x39; // '9'
-      for (i = 0 ; i <= 60 ; i++){
+      char dozen = 0x30;  // '0'
+      char unity = 0x31; // '1'
+      for (i = 0 ; i < 3 ; i++){
         if (state == state2){
-            lcd_cmd(0x02);
+            lcd_clear();
+            lcd_home();
+            
             if( i == 0){
               char const * startWatch ="00:00";
               lcd_puts(startWatch);
-              startTimerA0();
-              startTimerA0();
+              wait_1_sec();
             }
             else {
               char const * minstr ="00:";
@@ -69,13 +68,12 @@ void CountUp(){
               lcd_data(dozen);
               lcd_data(unity);
 
-              unity = unity -1;
-              if( unity == 0x2F){
-                unity = 0x39;
-                dozen = dozen-1;
+              unity = unity +1;
+              if( unity == 0x3A){
+                unity = 0x30;
+                dozen = dozen+1;
               }
-              startTimerA0();
-             startTimerA0();
+              wait_1_sec();
             }
         }
         else
@@ -90,8 +88,10 @@ void CountUp(){
 //-------------------------------------------------------------
 void startTimerA0(){
     TACCR0 = 0xFFFF;  // Timer Cycles - max
-    TA0CTL = TASSEL_2 + MC_1 + ID_3;  //  select: 2 - SMCLK ; control: 3 - Up/Down  ; divider: 3 - /8
-    // ACLK doesn't work on our msp, so we have to use smclk and divide the freq to get to 1 sec.
+    TA0CTL = TASSEL_2 + MC_1 + ID_3;  //  select: 2 - SMCLK ;
+                                      //control: 3 - Up/Down  ; 
+                                      //divider: 3 - /8
+    // no ACLCK, we use SMCLK.
     __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0 w/ interrupt
 }
 
@@ -100,10 +100,11 @@ void startTimerA0(){
 //-------------------------------------------------------------
 void tone_generator(){
     TA1CTL = TASSEL_2 + MC_1;                  // SMCLK, upmode
+    
     while(state == state3){
         ADC10CTL0 |= ENC + ADC10SC;             // Start sampling
-        __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0 w/ interrupt
-        ADC10CTL0 &= ~ADC10ON; // Don't get into interrupt
+        __bis_SR_register(LPM1_bits + GIE);       // Enter LPM0 w/ interrupt
+        ADC10CTL0 &= ~ADC10ON;                   // Don't get into interrupt
 
         unsigned int adc_conv = ADC10MEM;
         float coeff = 1.956;  // coeff = 2000 / 1023;
@@ -158,6 +159,7 @@ void Signal_shape(){
 
         }
 }
+
 
 
 
