@@ -27,11 +27,13 @@ void main(void){
 	  case state2: //PB1
 	    enable_interrupts();  // Enable to Cut the state
 	    lcd_clear();          // Clear LCD screen
+            CountUp();
 	    CountDown();          // Perform stop watch
             ////
             ////CountUp();
-		if (state == state2)  // Go to sleep only if timer reached 00:00
-		    state = state0;
+            lcd_clear();
+            if (state == state2)  // Go to sleep only if timer reached 00:00
+               state = state0;
 		break;
                     
           case state3: ; //PB2
@@ -39,15 +41,13 @@ void main(void){
             tone_generator();
                     break;
                 
-     /// case state4: //PB3 REAL TIME
-       /// Signal_shape();
-	///	break;
+
 		
 	}
   }
 }
 
-  
+  ////updated 13:13
   
   
   

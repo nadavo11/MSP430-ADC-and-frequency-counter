@@ -5,6 +5,12 @@
 unsigned int Count = 0x0;
 unsigned int REdge1, REdge2;
 
+void wait_1_sec(){
+  startTimerA0();
+  startTimerA0();
+}
+
+
 //-------------------------------------------------------------
 //              Frequency Measurement
 //-------------------------------------------------------------
@@ -79,27 +85,7 @@ void delay(unsigned int t){  //
 	
 	for(i=t; i>0; i--);
 }
-//---------------------------------------------------------------------
-//            General Function - No need
-//---------------------------------------------------------------------
-void int2str(char *str, unsigned int num){
-    int strSize = 0;
-    long tmp = num, len = 0;
-    int j;
-    // Find the size of the intPart by repeatedly dividing by 10
-    while(tmp){
-        len++;
-        tmp /= 10;
-    }
 
-    // Print out the numbers in reverse
-    for(j = len - 1; j >= 0; j--){
-        str[j] = (num % 10) + '0';
-        num /= 10;
-    }
-    strSize += len;
-    str[strSize] = '\0';
-}
 //---------------------------------------------------------------------
 //            Enter from LPM0 mode
 //---------------------------------------------------------------------
@@ -267,6 +253,18 @@ void lcd_strobe(){
   asm("NOP");
  // asm("NOP");
   LCD_EN(0);
+}
+
+
+//___________________________________________________________________
+
+//                      LCD PRINT number
+//__________________________________________________________________
+// The "lcd_print_num" function takes an unsigned integer as its input 
+//parameter and outputs the corresponding number on an LCD display.
+extern void lcd_print_num(unsigned int num){
+  // adding num to the ASCII code of the character '0' (which is 0x30) and passing the result to the "lcd_data" function.
+  lcd_data(0x30 + num);
 }
 //******************************************************************
 // Delay usec functions
