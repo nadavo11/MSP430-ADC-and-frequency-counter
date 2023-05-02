@@ -11,48 +11,65 @@ void wait_1_sec(){
 }
 
 
+/******************************************************************************
+ *
+ *
+ *                              freqMeas
+ * ____________________________________________________________________________
+ * Measures the frequency of a signal connected to P2.2/TA1.CCI2B pin
+ *
+ * Parameters: none
+ *
+ * Returns: void
+ *
+ *____________________________________________________________________________
 
-//              Frequency Measurement
+******************************************************************************/
 
 
 void freqMeas(){
-        WDTCTL = WDTPW + WDTHOLD;
-        float N_SMCLK;
-        float freq;
-        float tmp = 0;
-        float SMCLK_FREQ = 1048576;   // 2^20
-        unsigned int real_freq;
-        char strFreq[6] = {'\0'};
-        write_freq_tmp_LCD(); // Write template of Frequency
-        TA1CTL |= TASSEL_2 + MC_2 + TACLR;         //start Timer
-        while(state == state1){
-            disable_interrupts();
-            strFreq[6] = '\0';   // Reset strFreq
-            REdge2 = REdge1 =  0;
-            TA1CCTL2 |= CCIE;                                // enable interrupt
-            __bis_SR_register(LPM0_bits + GIE);              // Enter LPM0
-            if(REdge1 == 0 && REdge2 == 0)  // first time
-              continue;
-            tmp = 1.05915;  // after calc the error
-            N_SMCLK = 0.9*(REdge2 - REdge1)*tmp;
-            freq = SMCLK_FREQ / N_SMCLK;       // Calculate Frequency
-            real_freq = (unsigned int) freq ;
-            if (real_freq == 65535)  // delete later
-                continue;
-            sprintf(strFreq, "%d", real_freq);
-            write_freq_tmp_LCD();
-            lcd_home();
-            lcd_cursor_right();
-            lcd_cursor_right();
-            lcd_cursor_right();
-            lcd_cursor_right();
-            lcd_puts(strFreq);
+    WDTCTL = WDTPW + WDTHOLD; // Stop watchdog timer
+    float N_SMCLK; // Number of SMCLK cycles
+    float freq; // Measured frequency
+    float tmp = 0; // Temporary variable
+    float SMCLK_FREQ = 1048576; // SMCLK frequency (2^20)
 
-            cursor_off;
-            DelayMs(500);
-            enable_interrupts();
+
+    unsigned int real_freq; // Measured frequency as an integer
+    char strFreq[6] = {'\0'}; // String to hold the measured frequency
+    write_freq_tmp_LCD(); // Write template of Frequency to LCD
+    TA1CTL |= TASSEL_2 + MC_2 + TACLR; // Start Timer_A with SMCLK as source, in continuous mode, and clear the timer
+    while(state == state1){
+        disable_interrupts(); // Disable interrupts while measuring frequency
+        strFreq[6] = '\0'; // Reset strFreq
+        REdge2 = REdge1 =  0; // Reset edge detection variables
+        TA1CCTL2 |= CCIE; // Enable interrupt for CCI2B input
+        __bis_SR_register(LPM0_bits + GIE); // Enter LPM0 with interrupts enabled
+        if(REdge1 == 0 && REdge2 == 0) { // If it's the first time measuring, skip to next iteration
+            continue;
         }
-        TA1CTL = MC_0 ; // Stop Timer
+        tmp = 1.1915; // Correction factor for measurement error
+        N_SMCLK = 0.9*(REdge2 - REdge1)*tmp; // Calculate number of SMCLK cycles
+        freq = SMCLK_FREQ / N_SMCLK; // Calculate frequency
+        real_freq = (unsigned int) freq ; // Convert frequency to an integer
+        if (real_freq == 65535) { // If the frequency is out of range, skip to next iteration (delete later)
+            continue;
+        }
+        sprintf(strFreq, "%d", real_freq); // Convert frequency to a string
+        write_freq_tmp_LCD(); // Write template of Frequency to LCD
+        lcd_home(); // Move cursor to first position
+        lcd_cursor_right(); // Move cursor to position of measured frequency
+        lcd_cursor_right();
+        lcd_cursor_right();
+        lcd_cursor_right();
+        lcd_puts(strFreq); // Print measured frequency to LCD
+        cursor_off; // Turn off cursor
+        DelayMs(500); // Wait 500 ms
+        enable_interrupts(); // Re-enable interrupts
+    }
+    TA1CTL = MC_0 ; // Stop Timer_A
+
+
 }
 
 //             System Configuration  
@@ -200,6 +217,29 @@ void write_signal_shape_tmp_LCD(){
 
 // initialize the LCD
 
+/******************************************************************
+ * Displays a two-digit integer on the LCD screen.
+ * If the integer is less than 10, a leading zero is displayed.
+ *
+ * @param num The integer to display (should be between 0 and 99).
+ */
+void lcd_print_num(int num) {
+  // Extract the tens and ones digits
+  int tens = num / 10 + 0x30;
+  int ones = num % 10 + 0x30;
+
+  // Display the tens digit
+
+  lcd_data((char)tens);
+
+
+  // Display the ones digit
+  lcd_data((char)ones);
+}
+
+
+
+
 void lcd_init(){
 
     char init_value;
@@ -254,12 +294,6 @@ void lcd_strobe(){
 
 
 
-// The "lcd_print_num" function takes an unsigned integer as its input 
-//parameter and outputs the corresponding number on an LCD display.
-extern void lcd_print_num(unsigned int num){
-  // adding num to the ASCII code of the character '0' (which is 0x30) and passing the result to the "lcd_data" function.
-  lcd_data(0x30 + num);
-}
 
 // The " DelayUs" function  Delay usec functions
 //parameter and outputs the corresponding number on an LCD display.
@@ -278,10 +312,74 @@ void DelayMs(unsigned int cnt){
     for(i=cnt ; i>0 ; i--) DelayUs(1000); // tha command asm("nop") takes raphly 1usec
 
 }
+/*********************************************************************************************
+ *
+ *                              set pwm
+ *
+ *____________________________________________________________________________________________
+*        Configures Timer_A1 to generate a PWM signal with the specified period and
+*        duty cycle.
+*
+*
+*       This function configures Timer_A1 to generate a PWM signal with a duty cycle of 50%.
+*       The Timer_A1 clock source should be configured before calling this function.
+*       The period parameter should be selected based on the desired frequency of the PWM signal
+*       and the Timer_A1 clock frequency.
+*************************************************************************************************/
+void set_pwm(int period){
+    TA1CCR0 = period;
+    TA1CCR1 = period/2;
+
+}
+
+void stop_pwm(){
+    TA1CTL = MC_0 ; // Stop Timer
+
+}
 
 
+/******************************************************************************
+ *
+ *                          get ADC
+ *
+ *____________________________________________________________________________
+* @brief Reads the value from the ADC10 module and returns it.
+*
+* @return The converted value from the ADC10 module.
+*
+* @note This function enables the ADC10 module, starts a conversion, waits for the
+*       conversion to complete, and then disables the ADC10 module. The converted
+*       value is read from the ADC10MEM register and returned.
+******************************************************************************/
 
-//            TimerA0 Interrupt Service Routine
+unsigned int get_ADC(){
+
+    // Turn on ADC10 module
+    ADC10CTL0 |= ADC10ON;
+
+    // starts an ADC conversion by setting the ENC (enable conversion)
+    // and ADC10SC (start conversion) bits in ADC10CTL0.
+    ADC10CTL0 |= ENC + ADC10SC;             // Start sampling
+
+
+    //wait until the ADC conversion is complete before resuming execution.
+    __bis_SR_register(LPM1_bits + GIE);       // Enter LPM0 w/ interrupt
+
+    ADC10CTL0 &= ~ADC10ON;                   //Disable ADC10 interrupt
+
+    //reads the converted value from ADC10MEM.
+    return ADC10MEM;
+
+}
+
+/******************************************************************************
+ *
+ *                          TimerA1 ISR
+ *
+ *____________________________________________________________________________
+
+******************************************************************************/
+
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER1_A1_VECTOR
 __interrupt void TIMER1_A1_ISR(void)
@@ -325,8 +423,13 @@ void __attribute__ ((interrupt(TIMER1_A1_VECTOR))) TIMER1_A1_ISR (void)
   }
 }
 
+/******************************************************************************
+ *
+ *                          TimerA0 ISR
+ *
+ *____________________________________________________________________________
 
-//            TimerA0 Interrupt Service Routine
+******************************************************************************/
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER0_A0_VECTOR
@@ -342,8 +445,13 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
     TACTL = MC_0+TACLR;
 }
 
+/******************************************************************************
+ *
+ *                          ADC ISR
+ *
+ *____________________________________________________________________________
 
-//            ADC10 Vector Interrupt Service Routine
+******************************************************************************/
 #pragma vector = ADC10_VECTOR
 __interrupt void ADC10_ISR (void)
 {
@@ -351,8 +459,13 @@ __interrupt void ADC10_ISR (void)
 }
 
 
-//            Port1 Interrupt Service Routine
+/******************************************************************************
+ *
+ *                          Buttons ISR
+ *
+ *____________________________________________________________________________
 
+******************************************************************************/
 #pragma vector=PORT1_VECTOR
   __interrupt void PBs_handler(void){
    

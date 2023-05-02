@@ -12,76 +12,48 @@ unsigned int adcCapturePointer;
 
 //                         CountDown
 
+
+//                             CountUp
 void CountDown(){
       int i;
-      char dozen = 0x35;  // '5'
-      char unity = 0x39; // '9'
-      for (i =  0 ; i <= 60 ; i++){
-        if (state == state2){
-            lcd_cmd(0x2);
 
-            if( i == 0){
-              char const * startWatch ="01:00";
-              lcd_puts(startWatch);
-              wait_1_sec();
-            }
-            else {
-              char const * minute_str ="00:";
-              lcd_puts(minute_str);
-              lcd_data(dozen);
-              lcd_data(unity);
+      char const * startWatch ="01:00";
+      lcd_puts(startWatch);
+      wait_1_sec();
 
-              unity --;
-              // zero on units
-              if( unity == 0x2F){
-                unity = 0x39;
-                //decrease decimal value
-                dozen = dozen-1;
-              }
-              wait_1_sec();
-            }
-        }
-        else
-        {
+      for (i = 59 ; i >= 0 ; i--){
+        if (state != state2){
             break;
         }
-      }
+
+        lcd_clear();
+        lcd_home();
+
+        char const * minstr ="00:";
+        lcd_puts(minstr);
+        lcd_print_num(i);
+
+        wait_1_sec();
+     }
 }
-//                             CountUp
+
+
 void CountUp(){
       int i;
-      char dozen = 0x30;  // '0'
-      char unity = 0x31; // '1'
       for (i = 0 ; i < 60 ; i++){
-        if (state == state2){
-            lcd_clear();
-            lcd_home();
-            
-            if( i == 0){
-              char const * startWatch ="00:00";
-              lcd_puts(startWatch);
-              wait_1_sec();
-            }
-            else {
-              char const * minstr ="00:";
-              lcd_puts(minstr);
-              lcd_data(dozen);
-              lcd_data(unity);
-
-              unity = unity +1;
-              if( unity == 0x3A){
-                unity = 0x30;
-                dozen = dozen+1;
-              }
-              wait_1_sec();
-            }
-        }
-        else
-        {
+        if (state != state2){
             break;
         }
-      }
 
+        lcd_clear();
+        lcd_home();
+
+        char const * minstr ="00:";
+        lcd_puts(minstr);
+        lcd_print_num(i);
+
+        wait_1_sec();
+     }
 }
 
 //              StartTimer For Count Down
@@ -99,25 +71,30 @@ void startTimerA0(){
 //              Tone Generator
 
 void tone_generator(){
+
+    // constants
+    float SMCLK_FREQ = 1048576; // SMCLK freq 2^20
+    float coeff = 1.956;  // coeff = 2000 / 1023;
+    unsigned int adc_conv;
+
+    //sets up Timer A1 to use the SMCLK (2^20 Hz) and to count up to the value
+    //in TA1CCR0 before resetting. This will produce a PWM signal on the corresponding pin.
     TA1CTL = TASSEL_2 + MC_1;                  // SMCLK, upmode
     
     while(state == state3){
-        ADC10CTL0 |= ENC + ADC10SC;             // Start sampling
-        __bis_SR_register(LPM1_bits + GIE);       // Enter LPM0 w/ interrupt
-        ADC10CTL0 &= ~ADC10ON;                   // Don't get into interrupt
 
-        unsigned int adc_conv = ADC10MEM;
-        float coeff = 1.956;  // coeff = 2000 / 1023;
-        float f_out = coeff * adc_conv + 1000;  // Choose Linear Mapping
 
-        float SMCLK_FREQ = 1048576; // SMCLK freq 2^20
+        adc_conv = get_ADC();
+
+        //perform linear mapping to convert the analog input to a frequency
+        //value using the formula f_out = coeff * adc_conv + 1000
+
+        float f_out = coeff * adc_conv + 1000;
         unsigned int period_to_pwm = SMCLK_FREQ/f_out;
 
-        TA1CCR0 = period_to_pwm;
-        TA1CCR1 = (int) period_to_pwm/2;
-
+        set_pwm((int)period_to_pwm);
     }
-    TA1CTL = MC_0 ; // Stop Timer
+    stop_pwm();
 }
 
 

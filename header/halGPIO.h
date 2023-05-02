@@ -87,10 +87,15 @@ extern void lcd_puts(const char * s);
 extern void lcd_init();
 extern void lcd_strobe();
 extern void DelayMs(unsigned int);
+
+extern void set_pwm();
+extern void stop_pwm();
+
+extern void lcd_print_num(int num);
+extern unsigned int get_ADC();
 extern void freqMeas();
 extern void DelayUs(unsigned int);
 //
-extern void lcd_print_num(unsigned int num);
 
 /*
  *  Delay functions for HI-TECH C on the PIC18

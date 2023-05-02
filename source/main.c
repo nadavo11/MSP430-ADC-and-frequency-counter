@@ -7,8 +7,8 @@ enum SYSmode lpm_mode;
 void main(void){
   
   
-  state = state0;  //START STATE0=IDLE
-  lpm_mode = mode0;     // start in idle state on RESET
+  state = state0;
+  lpm_mode = mode0;
   sysConfig();
   lcd_init();
   lcd_clear();
@@ -21,23 +21,23 @@ void main(void){
 	      break;
 		 
 	  case state1: //PB0 
-	    freqMeas();  // Frequency Measurements
+	    freqMeas();
 	    break;
 
 	  case state2: //PB1
-	    enable_interrupts();  // Enable to Cut the state
-	    lcd_clear();          // Clear LCD screen
-            CountUp();
-	    CountDown();          // Perform stop watch
-            ////
-            ////CountUp();
+	    enable_interrupts();
+	    lcd_clear();
+        CountUp();
+	    CountDown();
+
             lcd_clear();
-            if (state == state2)  // Go to sleep only if timer reached 00:00
+            if (state == state2)
                state = state0;
 		break;
                     
           case state3: ; //PB2
-            enable_interrupts();  // Enable to Cut the state
+            lcd_clear();
+            enable_interrupts();
             tone_generator();
             
                     break;
