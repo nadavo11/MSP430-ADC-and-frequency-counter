@@ -7,7 +7,7 @@ enum SYSmode lpm_mode;
 void main(void){
   
   
-  state = state0;  // start in idle state on RESET
+  state = state0;  //START STATE0=IDLE
   lpm_mode = mode0;     // start in idle state on RESET
   sysConfig();
   lcd_init();
@@ -48,7 +48,7 @@ void main(void){
   }
 }
 
-  ////updated 13:13
+  ////updated 9:55
   
   
   

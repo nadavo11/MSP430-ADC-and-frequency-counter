@@ -4,16 +4,16 @@
 // Global Variables
 unsigned int Count = 0x0;
 unsigned int REdge1, REdge2;
-
+//                        Wait 1 sec
 void wait_1_sec(){
   startTimerA0();
   startTimerA0();
 }
 
 
-//-------------------------------------------------------------
+
 //              Frequency Measurement
-//-------------------------------------------------------------
+
 
 void freqMeas(){
         WDTCTL = WDTPW + WDTHOLD;
@@ -54,9 +54,9 @@ void freqMeas(){
         }
         TA1CTL = MC_0 ; // Stop Timer
 }
-//--------------------------------------------------------------------
+
 //             System Configuration  
-//--------------------------------------------------------------------
+
 void sysConfig(void){ 
 	GPIOconfig();
 	TIMER0_A0_config();
@@ -64,31 +64,31 @@ void sysConfig(void){
 	TIMER1_A2_config();
 	ADCconfig();
 }
-//--------------------------------------------------------------------
-//--------------------------------------------------------------------
+
+
 // 				Set Byte to Port
-//--------------------------------------------------------------------
+
 void SetByteToPort(char ch){
 	PBsArrPortOut |= ch;  
 } 
-//--------------------------------------------------------------------
+
 // 				Clear Port Byte
-//--------------------------------------------------------------------
+
 void clrPortByte(char ch){
 	PBsArrPortOut &= ~ch;
 } 
-//---------------------------------------------------------------------
+
 //            Polling based Delay function
-//---------------------------------------------------------------------
+
 void delay(unsigned int t){  //
 	volatile unsigned int i;
 	
 	for(i=t; i>0; i--);
 }
 
-//---------------------------------------------------------------------
+
 //            Enter from LPM0 mode
-//---------------------------------------------------------------------
+
 void enterLPM(unsigned char LPM_level){
 	if (LPM_level == 0x00) 
 	  _BIS_SR(LPM0_bits);     /* Enter Low Power Mode 0 */
@@ -101,25 +101,24 @@ void enterLPM(unsigned char LPM_level){
         else if(LPM_level == 0x04) 
 	  _BIS_SR(LPM4_bits);     /* Enter Low Power Mode 4 */
 }
-//---------------------------------------------------------------------
+
 //            Enable interrupts
-//---------------------------------------------------------------------
+
 void enable_interrupts(){
   _BIS_SR(GIE);
 }
-//---------------------------------------------------------------------
+
 //            Disable interrupts
-//---------------------------------------------------------------------
+
 void disable_interrupts(){
   _BIC_SR(GIE);
 }
 
-//---------------------------------------------------------------------
 //            LCD
-//---------------------------------------------------------------------
-//******************************************************************
-// send a command to the LCD
-//******************************************************************
+
+
+//             send a command to the LCD
+
 void lcd_cmd(unsigned char c){
 
     LCD_WAIT; // may check LCD busy flag, or just delay a little, depending on lcd.h
@@ -139,9 +138,8 @@ void lcd_cmd(unsigned char c){
         lcd_strobe();
     }
 }
-//******************************************************************
-// send data to the LCD
-//******************************************************************
+
+//                       send data to the LCD
 void lcd_data(unsigned char c){
 
     LCD_WAIT; // may check LCD busy flag, or just delay a little, depending on lcd.h
@@ -166,17 +164,17 @@ void lcd_data(unsigned char c){
 
     LCD_RS(0);
 }
-//******************************************************************
-// write a string of chars to the LCD
-//******************************************************************
+
+//                write a string of chars to the LCD
+
 void lcd_puts(const char * s){
 
     while(*s)
         lcd_data(*s++);
 }
-//******************************************************************
+
 //    write frequency template to LCD
-//******************************************************************
+
 void write_freq_tmp_LCD(){
    lcd_clear();
    lcd_home();
@@ -190,9 +188,8 @@ void write_freq_tmp_LCD(){
      lcd_cursor_right();
      lcd_puts(Hz);
 }
-//******************************************************************
 //    write signal shape template to LCD
-//******************************************************************
+
 void write_signal_shape_tmp_LCD(){
    lcd_clear();
    lcd_home();
@@ -200,9 +197,9 @@ void write_signal_shape_tmp_LCD(){
      lcd_puts(signal_shape);
      lcd_new_line;
 }
-//******************************************************************
+
 // initialize the LCD
-//******************************************************************
+
 void lcd_init(){
 
     char init_value;
@@ -245,9 +242,9 @@ void lcd_init(){
     lcd_cmd(0x6); //Entry Mode
     lcd_cmd(0x80); //Initialize DDRAM address to zero
 }
-//******************************************************************
+
 // lcd strobe functions
-//******************************************************************
+
 void lcd_strobe(){
   LCD_EN(1);
   asm("NOP");
@@ -256,28 +253,25 @@ void lcd_strobe(){
 }
 
 
-//___________________________________________________________________
 
-//                      LCD PRINT number
-//__________________________________________________________________
 // The "lcd_print_num" function takes an unsigned integer as its input 
 //parameter and outputs the corresponding number on an LCD display.
 extern void lcd_print_num(unsigned int num){
   // adding num to the ASCII code of the character '0' (which is 0x30) and passing the result to the "lcd_data" function.
   lcd_data(0x30 + num);
 }
-//******************************************************************
-// Delay usec functions
-//******************************************************************
+
+// The " DelayUs" function  Delay usec functions
+//parameter and outputs the corresponding number on an LCD display.
 void DelayUs(unsigned int cnt){
 
     unsigned char i;
     for(i=cnt ; i>0 ; i--) asm("nop"); // tha command asm("nop") takes raphly 1usec
 
 }
-//******************************************************************
+
 // Delay msec functions
-//******************************************************************
+
 void DelayMs(unsigned int cnt){
 
     unsigned char i;
@@ -286,9 +280,8 @@ void DelayMs(unsigned int cnt){
 }
 
 
-//*********************************************************************
+
 //            TimerA0 Interrupt Service Routine
-//*********************************************************************
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER1_A1_VECTOR
 __interrupt void TIMER1_A1_ISR(void)
@@ -333,9 +326,8 @@ void __attribute__ ((interrupt(TIMER1_A1_VECTOR))) TIMER1_A1_ISR (void)
 }
 
 
-//*********************************************************************
 //            TimerA0 Interrupt Service Routine
-//*********************************************************************
+
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector = TIMER0_A0_VECTOR
 __interrupt void Timer_A (void)
@@ -350,9 +342,8 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
     TACTL = MC_0+TACLR;
 }
 
-//*********************************************************************
+
 //            ADC10 Vector Interrupt Service Routine
-//*********************************************************************
 #pragma vector = ADC10_VECTOR
 __interrupt void ADC10_ISR (void)
 {
@@ -360,16 +351,15 @@ __interrupt void ADC10_ISR (void)
 }
 
 
-//*********************************************************************
 //            Port1 Interrupt Service Routine
-//*********************************************************************
+
 #pragma vector=PORT1_VECTOR
   __interrupt void PBs_handler(void){
    
 	delay(debounceVal);
-//---------------------------------------------------------------------
+
 //            selector of transition between states
-//---------------------------------------------------------------------
+
 	if(PBsArrIntPend & PB0){
 	  state = state1;
 	  PBsArrIntPend &= ~PB0;
@@ -382,9 +372,9 @@ __interrupt void ADC10_ISR (void)
 	  state = state3;
 	  PBsArrIntPend &= ~PB2;
         }
-//---------------------------------------------------------------------
+
 //            Exit from a given LPM 
-//---------------------------------------------------------------------	
+
         switch(lpm_mode){
 		case mode0:
 		 LPM0_EXIT; // must be called from ISR only
@@ -410,22 +400,22 @@ __interrupt void ADC10_ISR (void)
 }
 
 
-//*********************************************************************
+
 //            Port2 Interrupt Service Routine
-//*********************************************************************
+
 #pragma vector=PORT2_VECTOR
   __interrupt void PBs_handler_P2(void){
       delay(debounceVal);
-//---------------------------------------------------------------------
+
 //            selector of transition between states
-//---------------------------------------------------------------------
+
       if(PB3sArrIntPend & PB3){    // For Main Lab
           state = state4;
           PB3sArrIntPend &= ~PB3;
       }
-//---------------------------------------------------------------------
+
 //            Exit from a given LPM
-//---------------------------------------------------------------------
+
       switch(lpm_mode){
       case mode0:
           LPM0_EXIT; // must be called from ISR only

@@ -9,14 +9,14 @@
 #define ADC_NUMBER_CAPTURES 100
 unsigned int adcCaptureValues[ADC_NUMBER_CAPTURES];
 unsigned int adcCapturePointer;
-//-------------------------------------------------------------
+
 //                         CountDown
-//-------------------------------------------------------------
+
 void CountDown(){
       int i;
       char dozen = 0x35;  // '5'
       char unity = 0x39; // '9'
-      for (i =  0 ; i <= 3 ; i++){
+      for (i =  0 ; i <= 60 ; i++){
         if (state == state2){
             lcd_cmd(0x2);
 
@@ -47,12 +47,12 @@ void CountDown(){
         }
       }
 }
-/////////////////////////////////////////////////////////////////////////
+//                             CountUp
 void CountUp(){
       int i;
       char dozen = 0x30;  // '0'
       char unity = 0x31; // '1'
-      for (i = 0 ; i < 3 ; i++){
+      for (i = 0 ; i < 60 ; i++){
         if (state == state2){
             lcd_clear();
             lcd_home();
@@ -83,9 +83,9 @@ void CountUp(){
       }
 
 }
-//-------------------------------------------------------------
+
 //              StartTimer For Count Down
-//-------------------------------------------------------------
+
 void startTimerA0(){
     TACCR0 = 0xFFFF;  // Timer Cycles - max
     TA0CTL = TASSEL_2 + MC_1 + ID_3;  //  select: 2 - SMCLK ;
@@ -95,9 +95,9 @@ void startTimerA0(){
     __bis_SR_register(LPM0_bits + GIE);       // Enter LPM0 w/ interrupt
 }
 
-//-------------------------------------------------------------
+
 //              Tone Generator
-//-------------------------------------------------------------
+
 void tone_generator(){
     TA1CTL = TASSEL_2 + MC_1;                  // SMCLK, upmode
     
@@ -120,9 +120,9 @@ void tone_generator(){
     TA1CTL = MC_0 ; // Stop Timer
 }
 
-//-------------------------------------------------------------
+
 //              Signal Shape
-//-------------------------------------------------------------
+
 
 void Signal_shape(){
         while(state == state4){
