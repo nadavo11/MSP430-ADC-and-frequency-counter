@@ -34,9 +34,9 @@ extern __interrupt void PBs_handler_P2(void);
     #define LCD_WAIT DelayMs(5)
 #endif
 
-/*----------------------------------------------------------
-  CONFIG: change values according to your port pin selection
-------------------------------------------------------------*/
+
+//  CONFIG: change values according to your port pin selection
+
 #define LCD_EN(a)   (!a ? (P2OUT&=~0X20) : (P2OUT|=0X20)) // P2.5 is lcd enable pin
 #define LCD_EN_DIR(a)   (!a ? (P2DIR&=~0X20) : (P2DIR|=0X20)) // P2.5 pin direction
 
@@ -49,9 +49,9 @@ extern __interrupt void PBs_handler_P2(void);
 #define LCD_DATA_OFFSET 0x04 //data pin selection offset for 4 bit mode, variable range is 0-4, default 0 - Px.0-3, no offset
 
 
-/*---------------------------------------------------------
-  END CONFIG
------------------------------------------------------------*/
+
+//          END CONFIG
+
 #define FOURBIT_MODE    0x0
 #define EIGHTBIT_MODE   0x1
 #define LCD_MODE        FOURBIT_MODE
